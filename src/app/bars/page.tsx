@@ -2,7 +2,9 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { DataFrame, readCSV } from "danfojs";
 import {
+  Bar,
   CartesianGrid,
+  ComposedChart,
   Legend,
   Line,
   LineChart,
@@ -126,15 +128,15 @@ function SinglePlot({
 }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <LineChart
+      <ComposedChart
         width={500}
-        height={300}
+        height={400}
         data={data}
         margin={{
-          top: 5,
-          right: 30,
+          top: 20,
+          right: 20,
+          bottom: 20,
           left: 20,
-          bottom: 5,
         }}
       >
         <CartesianGrid strokeDasharray="3 3" />
@@ -142,9 +144,9 @@ function SinglePlot({
         <YAxis />
         <Tooltip />
         <Legend />
-        {/* <Line type="monotone" dataKey="pv" stroke="#8884d8" activeDot={{ r: 8 }} /> */}
-        <Line type="monotone" dataKey={lineKey} />
-      </LineChart>
+        <Bar dataKey={lineKey} barSize={20} fill="#413ea0" />
+        <Line type="monotone" dataKey={lineKey} stroke="#ff7300" />
+      </ComposedChart>
     </ResponsiveContainer>
   );
 }
