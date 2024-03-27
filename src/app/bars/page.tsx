@@ -12,7 +12,7 @@ import {
   YAxis,
 } from "recharts";
 
-export function Selector({
+function Selector({
   state,
   city,
   setState,
@@ -115,7 +115,7 @@ export function Selector({
   );
 }
 
-export function SinglePlot({
+function SinglePlot({
   data,
   xKey,
   lineKey,
@@ -149,7 +149,7 @@ export function SinglePlot({
   );
 }
 
-export function BarsComponent() {
+function BarsComponent() {
   const [state, setState] = useState("CA");
   const [city, setCity] = useState("");
 
