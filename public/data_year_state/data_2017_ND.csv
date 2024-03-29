@@ -1,0 +1,5 @@
+Severity,Start_Time,Start_Lat,Start_Lng,City,State,Temperature(F),Humidity(%),Visibility(mi),Wind_Speed(mph),Precipitation(in),Weather_Condition
+2,2017-12-27 05:41:47,48.581299,-102.004341,Kenmare,ND,-25.6,69.0,10.0,,,Clear
+3,2017-09-01 13:30:25,46.892384,-98.333321,Spiritwood,ND,71.1,81.0,10.0,13.8,,Overcast
+3,2017-08-01 08:02:16,46.899204,-98.708099,Jamestown,ND,64.0,84.0,10.0,9.2,,Clear
+3,2017-08-09 17:25:40,46.892384,-98.333321,Spiritwood,ND,70.0,76.0,10.0,8.1,,Overcast

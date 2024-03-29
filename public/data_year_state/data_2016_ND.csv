@@ -1,0 +1,4 @@
+Severity,Start_Time,Start_Lat,Start_Lng,City,State,Temperature(F),Humidity(%),Visibility(mi),Wind_Speed(mph),Precipitation(in),Weather_Condition
+4,2016-12-06 08:53:52,48.00539000000001,-97.859596,Niagara,ND,28.2,92.0,0.5,27.6,0.0,Light Snow
+4,2016-09-06 00:26:23,46.82896,-100.87115,Mandan,ND,55.4,100.0,10.0,3.5,,Overcast
+4,2016-09-06 00:26:23,46.82766,-100.88073,Mandan,ND,55.4,100.0,10.0,3.5,,Overcast

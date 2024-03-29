@@ -1,6 +1,6 @@
 "use client";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { DataFrame, readCSV } from "danfojs";
+import { readCSV } from "danfojs";
 import {
   Bar,
   CartesianGrid,
