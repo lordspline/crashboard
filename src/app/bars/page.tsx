@@ -13,6 +13,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { readRemoteFile } from "react-papaparse";
 
 function Selector({
   state,
@@ -162,6 +163,15 @@ function BarsComponent() {
   const [severeCountData, setSevereCountData] = useState<any[]>([]);
 
   useEffect(() => {
+    readRemoteFile("state_city_year_grouped.csv", {
+      header: true,
+      complete: (results) => {
+        console.log("---------------------------");
+        console.log("Results:", results["data"]);
+        console.log("---------------------------");
+      },
+      download: true,
+    });
     readCSV("state_city_year_grouped.csv").then((df) => {
       const curr_df = df.loc({
         rows: df["State"].eq(state),

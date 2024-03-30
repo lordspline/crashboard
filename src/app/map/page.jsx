@@ -19,6 +19,7 @@ import {
   YearStateAvailablity,
 } from "./constants";
 import { areArraysEqual, categorizeWeatherCondition, getSeason } from "./utils";
+import { readRemoteFile } from "react-papaparse";
 
 const ambientLight = new AmbientLight({
   color: [255, 255, 255],
@@ -119,18 +120,32 @@ function MapView({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
   //data
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/data?year=${year}&state=${state}`)
-      .then((response) => response.json())
-      .then((data) => {
+
+    readRemoteFile(`data_year_state/data_${year}_${state}.csv`, {
+      header: true,
+      complete: (results) => {
+        const data = results.data
+        console.log(data)
         setData(data);
-        setFixDomain(false);
-      })
-      .catch((error) => {
-        console.log(error);
-      })
-      .finally(() => {
+        setFixDomain(false); 
         setLoading(false);
-      });
+      },
+      download: true,
+    });
+
+    // fetch(`/api/data?year=${year}&state=${state}`)
+    //   .then((response) => response.json())
+    //   .then((data) => {
+    //     console.log(data)
+    //     setData(data);
+    //     setFixDomain(false);
+    //   })
+    //   .catch((error) => {
+    //     console.log(error);
+    //   })
+    //   .finally(() => {
+    //     setLoading(false);
+    //   });
   }, [year, state]);
 
   //fiters

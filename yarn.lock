@@ -1005,6 +1005,13 @@
   resolved "https://registry.npmjs.org/@types/pako/-/pako-1.0.7.tgz"
   integrity sha512-YBtzT2ztNF6R/9+UXj2wTGFnC9NklAnASt3sC0h2m1bbH7G6FyBIkt4AN8ThZpNfxUo1b2iMVO0UawiJymEt8A==
 
+"@types/papaparse@^5.3.9":
+  version "5.3.14"
+  resolved "https://registry.npmjs.org/@types/papaparse/-/papaparse-5.3.14.tgz"
+  integrity sha512-LxJ4iEFcpqc6METwp9f6BV6VVc43m6MfH0VqFosHvrUgfXiFe6ww7R3itkOQ+TCK6Y+Iv/+RnnvtRZnkc5Kc9g==
+  dependencies:
+    "@types/node" "*"
+
 "@types/pbf@*", "@types/pbf@^3.0.5":
   version "3.0.5"
   resolved "https://registry.npmjs.org/@types/pbf/-/pbf-3.0.5.tgz"
@@ -3965,7 +3972,7 @@ pako@~1.0.2, pako@1.0.11:
   resolved "https://registry.npmjs.org/pako/-/pako-1.0.11.tgz"
   integrity sha512-4hLB8Py4zZce5s4yd9XzopqwVv/yGNhV1Bl8NTmCq1763HeK2+EwVTv+leGeL13Dnh2wfbqowVPXCIO0z4taYw==
 
-papaparse@^5.3.1:
+papaparse@^5.3.1, papaparse@^5.4.1:
   version "5.4.1"
   resolved "https://registry.npmjs.org/papaparse/-/papaparse-5.4.1.tgz"
   integrity sha512-HipMsgJkZu8br23pW15uvo6sib6wne/4woLZPlFf3rpDyMe9ywEXUsuD7+6K9PRkJlVT51j/sCOYDKGGS3ZJrw==
@@ -4202,6 +4209,14 @@ react-map-gl@^7.1.7:
   dependencies:
     "@maplibre/maplibre-gl-style-spec" "^19.2.1"
     "@types/mapbox-gl" ">=1.0.0"
+
+react-papaparse@^4.4.0:
+  version "4.4.0"
+  resolved "https://registry.npmjs.org/react-papaparse/-/react-papaparse-4.4.0.tgz"
+  integrity sha512-xTEwHZYJ+1dh9mQDQjjwJXmWyX20DdZ52u+ddw75V+Xm5qsjXSvWmC7c8K82vRwMjKAOH2S9uFyGpHEyEztkUQ==
+  dependencies:
+    "@types/papaparse" "^5.3.9"
+    papaparse "^5.4.1"
 
 react-smooth@^4.0.0:
   version "4.0.1"

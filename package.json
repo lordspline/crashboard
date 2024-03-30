@@ -20,6 +20,7 @@
     "react-dom": "^18",
     "react-hook-form": "^7.51.2",
     "react-map-gl": "^7.1.7",
+    "react-papaparse": "^4.4.0",
     "recharts": "^2.12.3",
     "sass": "^1.72.0",
     "vega": "^5.25"
