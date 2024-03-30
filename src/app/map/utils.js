@@ -54,19 +54,29 @@ export function categorizeWeatherCondition(condition) {
   else return "other";
 }
 
-export function areArraysEqual(array1, array2) {
-  if (array1.length !== array2.length) {
-    return false;
-  }
+export function isEqual(value, other) {
+  if (typeof value !== typeof other) return false;
 
-  const sortedArray1 = [...array1].sort();
-  const sortedArray2 = [...array2].sort();
-
-  for (let i = 0; i < sortedArray1.length; i++) {
-    if (sortedArray1[i] !== sortedArray2[i]) {
-      return false;
+  if (Array.isArray(value) && Array.isArray(other)) {
+    if (value.length !== other.length) return false;
+    const sortedValue = [...value].sort();
+    const sortedOther = [...other].sort();
+    for (let i = 0; i < sortedValue.length; i++) {
+      if (!isEqual(sortedValue[i], sortedOther[i])) return false;
     }
+    return true;
   }
 
-  return true;
+  if (typeof value === "object" && value !== null && other !== null) {
+    const valueKeys = Object.keys(value);
+    const otherKeys = Object.keys(other);
+    if (valueKeys.length !== otherKeys.length) return false;
+    for (const key of valueKeys) {
+      if (!otherKeys.includes(key) || !isEqual(value[key], other[key]))
+        return false;
+    }
+    return true;
+  }
+
+  return value === other;
 }
