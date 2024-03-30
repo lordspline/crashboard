@@ -1,0 +1,9 @@
+Severity,Start_Time,Start_Lat,Start_Lng,City,State,Temperature(F),Humidity(%),Visibility(mi),Wind_Speed(mph),Precipitation(in),Weather_Condition
+3,2016-12-19 08:22:41,43.5489,-96.7807,Sioux Falls,SD,9.0,70.0,10.0,8.1,,Mostly Cloudy
+3,2016-12-19 08:22:41,43.53808,-96.78022,Sioux Falls,SD,9.0,70.0,10.0,8.1,,Mostly Cloudy
+4,2016-11-18 11:26:10,42.788447,-96.792312,Burbank,SD,,,0.2,41.4,,Overcast
+4,2016-08-03 08:23:24,43.60912,-96.94414,Hartford,SD,73.9,91.0,9.0,4.6,,Partly Cloudy
+4,2016-08-03 08:23:24,43.60884,-96.950329,Hartford,SD,73.9,91.0,9.0,4.6,,Partly Cloudy
+2,2016-08-31 18:05:50,44.10343,-102.71237,New Underwood,SD,79.0,44.0,10.0,12.7,,Clear
+4,2016-07-15 10:33:11,43.83625,-101.65565,Kadoka,SD,71.1,59.0,10.0,3.5,,Clear
+3,2016-04-13 15:39:14,43.5278,-96.702,Sioux Falls,SD,73.9,27.0,10.0,,,Scattered Clouds
