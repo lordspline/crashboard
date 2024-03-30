@@ -23,6 +23,6 @@
     "target": "es5",
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/map/sanddance.jsx", "src/app/map/page.jsx", "src/pages/api/data.js", "src/app/map/utils.js"],
   "exclude": ["node_modules"]
 }

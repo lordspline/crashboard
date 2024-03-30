@@ -53,7 +53,7 @@ const material = {
 const MAP_STYLE =
   "https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json";
 
-export const colorRange = [
+const colorRange = [
   [1, 152, 189],
   [73, 227, 206],
   [216, 254, 181],
@@ -76,7 +76,7 @@ function getTooltip({ object }) {
     ${count} Accidents`;
 }
 
-export default function Home({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
+function MapView({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -371,4 +371,8 @@ export default function Home({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
       </div>
     </div>
   );
+}
+
+export default function Home() {
+  return <MapView mapStyle={MAP_STYLE} upperPercentile={100} />;
 }
