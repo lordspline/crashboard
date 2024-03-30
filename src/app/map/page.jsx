@@ -18,8 +18,15 @@ import {
   WeatherConditions,
   YearStateAvailablity,
 } from "./constants";
-import { areArraysEqual, categorizeWeatherCondition, getSeason } from "./utils";
+import {
+  areArraysEqual,
+  categorizeWeatherCondition,
+  getSeason,
+  isEqual,
+} from "./utils";
 import { readRemoteFile } from "react-papaparse";
+import MultiRangeSlider from "./MultiRangeSlider";
+import { debounce } from "lodash";
 
 const ambientLight = new AmbientLight({
   color: [255, 255, 255],
@@ -77,6 +84,13 @@ function getTooltip({ object }) {
     ${count} Accidents`;
 }
 
+const defaultFilters = {
+  season: "All",
+  time: [0, 24],
+  weather: "All",
+  severity: [1, 2, 3, 4],
+};
+
 function MapView({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
@@ -91,14 +105,14 @@ function MapView({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
   const [color, setColor] = useState(1000);
   const [filter, setFilter] = useState(1000);
 
-  const [season, setSeason] = useState("All");
-  const [time, setTime] = useState("All");
-  const [weather, setWeather] = useState("All");
-  const [severity, setSeverity] = useState([1, 2, 3, 4]);
+  const [season, setSeason] = useState(defaultFilters.season);
+  const [time, setTime] = useState(defaultFilters.time);
+  const [weather, setWeather] = useState(defaultFilters.weather);
+  const [severity, setSeverity] = useState(defaultFilters.severity);
 
   const [domain, setDomain] = useState([0, 0]);
   const [fixDomain, setFixDomain] = useState(false);
-  const prevFilters = useRef({ season, weather, severity });
+  const prevFilters = useRef({ season, weather, severity, time });
 
   const stateOptions = useMemo(() => {
     return YearStateAvailablity[year];
@@ -124,10 +138,10 @@ function MapView({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
     readRemoteFile(`data_year_state/data_${year}_${state}.csv`, {
       header: true,
       complete: (results) => {
-        const data = results.data
-        console.log(data)
+        const data = results.data;
         setData(data);
-        setFixDomain(false); 
+        setFixDomain(false);
+        resetFilters();
         setLoading(false);
       },
       download: true,
@@ -148,8 +162,11 @@ function MapView({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
     //   });
   }, [year, state]);
 
-  //fiters
   useEffect(() => {
+    resetFilters();
+  }, [radius]);
+
+  const debounceFiltering = debounce(() => {
     const filteredData = data.filter((item) => {
       if (season !== "All") {
         const month = new Date(item.Start_Time).getMonth() + 1;
@@ -162,28 +179,56 @@ function MapView({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
       if (severity.length !== 4) {
         if (!severity.includes(Number(item["Severity"]))) return false;
       }
+      if (!(time[0] === 0 && time[1] === 24)) {
+        const hour = new Date(item["Start_Time"]).getHours();
+        const [startHour, endHour] = time;
+        if (!(hour >= startHour && hour < endHour)) return false;
+      }
       return true;
     });
 
     setFilteredData(filteredData);
+    console.log(
+      "filter",
+      season,
+      weather,
+      severity,
+      time,
+      data.length,
+      filteredData.length,
+      domain
+    );
 
-    if (
-      prevFilters.current.season !== season ||
-      prevFilters.current.weather !== weather ||
-      !areArraysEqual(prevFilters.current.severity, severity)
-    ) {
+    if (isEqual(defaultFilters, { season, weather, severity, time })) {
+      setFixDomain(false);
+    } else {
       setFixDomain(true);
-      prevFilters.current = {
-        season,
-        weather,
-        severity,
-      };
     }
-  }, [data, season, weather, severity]);
+
+    prevFilters.current = {
+      season,
+      weather,
+      severity,
+      time,
+    };
+  }, 300);
+
+  const resetFilters = () => {
+    const { season, weather, severity, time } = defaultFilters;
+    setSeason(season);
+    setTime(time);
+    setWeather(weather);
+    setSeverity(severity);
+  };
+
+  //fiters
+  useEffect(() => {
+    debounceFiltering();
+    return () => debounceFiltering.cancel();
+  }, [data, season, weather, severity, time]);
 
   const layers = useMemo(() => {
-    console.log(fixDomain, radius);
-    return [
+    const layer = [
       new HexagonLayer({
         id: "heatmap",
         colorRange,
@@ -211,6 +256,8 @@ function MapView({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
         },
       }),
     ];
+    // console.log(layer);
+    return layer;
   }, [filteredData, radius, coverage, fixDomain]);
 
   return (
@@ -293,6 +340,7 @@ function MapView({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
                 <span className="label-text">Seasons</span>
               </div>
               <select
+                value={season}
                 defaultValue={"All"}
                 className="select select-bordered select-sm"
                 onChange={(e) => {
@@ -307,11 +355,20 @@ function MapView({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
               </select>
             </label>
 
-            {/* <label className="form-control w-full max-w-xs">
+            <label className="form-control w-full max-w-xs relative">
               <div className="label">
                 <span className="label-text">Time</span>
               </div>
-            </label> */}
+              <MultiRangeSlider
+                min={0}
+                max={24}
+                step={1}
+                value={time}
+                onChange={({ min, max }) => {
+                  setTime([min, max]);
+                }}
+              ></MultiRangeSlider>
+            </label>
 
             <label className="form-control w-full max-w-xs">
               <div className="label">
@@ -363,10 +420,10 @@ function MapView({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
           </div>
         </div>
       </div>
-      <div className="vis">
+      <div className="vis relative">
         {loading && (
-          <div className="flex  z-50 justify-center items-center w-full h-full">
-            <span className="loading loading-spinner loading-md"></span>
+          <div className="flex pointer-events-none select-none z-50 justify-center items-center w-full h-full absolute">
+            <span className="loading loading-spinner loading-lg"></span>
           </div>
         )}
         <DeckGL

@@ -1,0 +1,111 @@
+.time-range-container {
+  padding-top: 1rem;
+  padding-bottom: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+
+  .slider {
+    position: relative;
+    width: 100%;
+  }
+
+  .slider__track,
+  .slider__range,
+  .slider__left-value,
+  .slider__right-value {
+    position: absolute;
+  }
+
+  .slider__track {
+    @apply rounded-box bg-base-content/10 h-1 w-full;
+    width: 100%;
+    z-index: 1;
+  }
+
+  .slider__range {
+    @apply rounded-box bg-base-content;
+    z-index: 2;
+    height: 20px;
+    top: -10px;
+    box-sizing: content-box;
+  }
+
+  .slider__left-value,
+  .slider__right-value {
+    color: #dee2e6;
+    font-size: 12px;
+    margin-top: 20px;
+  }
+
+  .slider__left-value {
+    left: 4px;
+  }
+
+  .slider__right-value {
+    right: 4px;
+  }
+
+  //   /* Removing the default appearance */
+  input[type="range"] {
+    width: 100%;
+    -webkit-appearance: none;
+    background: transparent !important;
+    --range-shdw: none;
+  }
+
+  .thumb,
+  .thumb::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .thumb {
+    pointer-events: none;
+    position: absolute;
+    overflow: hidden;
+  }
+
+  .thumb--zindex-3 {
+    z-index: 3;
+  }
+
+  .thumb--zindex-4 {
+    z-index: 4;
+  }
+
+  .thumb--zindex-5 {
+    z-index: 5;
+  }
+
+  //   /* For Chrome browsers */
+  .thumb::-webkit-slider-thumb {
+    @apply rounded-box bg-base-100 relative h-5 w-5 border-none;
+    --range-shdw: theme(colors.base-content);
+    --filler-size: 0rem;
+    --filler-offset: 0rem;
+    box-shadow: 0 0 0 3px var(--range-shdw) inset, var(--focus-shadow, 0 0),
+      calc(var(--filler-size) * -1 - var(--filler-offset)) 0 0
+        var(--filler-size);
+
+    cursor: pointer;
+    pointer-events: all;
+    position: relative;
+  }
+
+  /* For Firefox browsers */
+  .thumb::-moz-range-thumb {
+    @apply rounded-box bg-base-100 relative h-5 w-5 border-none;
+    --range-shdw: theme(colors.base-content);
+    --filler-size: 0rem;
+    --filler-offset: 0rem;
+    box-shadow: 0 0 0 3px var(--range-shdw) inset, var(--focus-shadow, 0 0),
+      calc(var(--filler-size) * -1 - var(--filler-offset)) 0 0
+        var(--filler-size);
+
+    cursor: pointer;
+    pointer-events: all;
+    position: relative;
+  }
+}
