@@ -207,7 +207,7 @@ function MapView({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
     if (tab === "prediction") {
       const layer = new HeatmapLayer({
         id: "heatmap-layer",
-        data: predictData,
+        data: predictData.filter((d) => d.State === state),
         // pickable: true,
         colorRange,
         // aggregation: "SUM",
@@ -280,7 +280,7 @@ function MapView({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
       // console.log(layer);
       return [layer];
     }
-  }, [filteredData, radius, coverage, selectedIdx, tab]);
+  }, [filteredData, state, radius, coverage, selectedIdx, tab]);
 
   return (
     <ConfigProvider
