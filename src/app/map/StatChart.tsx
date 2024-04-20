@@ -28,6 +28,9 @@ export function Plot({
   barKey: string;
   barName: string;
   lineName?: string;
+  children: any;
+  xAxisOptions: any;
+  legend: any;
 }) {
   return (
     <ResponsiveContainer width="100%" height="100%">

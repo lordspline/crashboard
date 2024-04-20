@@ -122,7 +122,7 @@ function Selector({
   );
 }
 
-export function SinglePlot({
+function SinglePlot({
   data,
   xKey,
   lineKey,
@@ -156,7 +156,7 @@ export function SinglePlot({
   );
 }
 
-export function DoublePlot({
+function DoublePlot({
   data,
   xKey,
   lineKey,
@@ -171,6 +171,7 @@ export function DoublePlot({
   barKey: string;
   barName: string;
   lineName?: string;
+  stackId: any;
 }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
