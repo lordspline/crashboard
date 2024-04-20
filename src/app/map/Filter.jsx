@@ -71,10 +71,6 @@ const Filter = ({
                 value={year || "2023"}
                 className="select select-bordered select-sm"
                 onChange={(e) => {
-                  setPeriod([
-                    dayjs(`${e.target.value}-01-01`),
-                    dayjs(`${e.target.value}-12-31`),
-                  ]);
                   setYear(e.target.value);
                 }}
               >

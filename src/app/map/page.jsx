@@ -112,7 +112,7 @@ function MapView({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
       complete: (results) => {
         const data = results.data;
         setData(processData(data));
-        resetFilters();
+        // resetFilters();
         unselect();
         setLoading(false);
       },
@@ -185,13 +185,13 @@ function MapView({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
 
   const onChangeTab = () => {
     // setYear("2023");
-    resetFilters();
+    // resetFilters();
     unselect();
     setTab((prev) => (prev === "history" ? "prediction" : "history"));
   };
 
   const onChangeRadius = (e) => {
-    resetFilters();
+    // resetFilters();
     unselect();
     setRadius(e.target.value);
   };
@@ -204,7 +204,6 @@ function MapView({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
   }, [data, weather, severity, time, period]);
 
   const layers = useMemo(() => {
-    if (!filteredData) return;
     if (tab === "prediction") {
       const layer = new HeatmapLayer({
         id: "heatmap-layer",
@@ -232,9 +231,9 @@ function MapView({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
         onSetColorDomain: (domain) => {
           setColorDomain(domain);
         },
-        data: filteredData,
+        data: filteredData || [],
         elevationRange: [0, 3000],
-        elevationScale: [data && data.length ? 50 : 0],
+        elevationScale: [filteredData && filteredData.length ? 50 : 0],
         // elevationDomain: domain,
         // onSetElevationDomain: (minmax) => {
         //   if (
@@ -281,7 +280,7 @@ function MapView({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
       // console.log(layer);
       return [layer];
     }
-  }, [filteredData, state, year, radius, coverage, selectedIdx, tab]);
+  }, [filteredData, radius, coverage, selectedIdx, tab]);
 
   return (
     <ConfigProvider
