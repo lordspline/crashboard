@@ -17,6 +17,7 @@ import {
   YAxis,
 } from "recharts";
 import { readRemoteFile } from "react-papaparse";
+import { format } from "../map/utils";
 
 function Selector({
   state,
@@ -121,7 +122,7 @@ function Selector({
   );
 }
 
-function SinglePlot({
+export function SinglePlot({
   data,
   xKey,
   lineKey,
@@ -150,6 +151,62 @@ function SinglePlot({
         <Legend />
         <Bar dataKey={lineKey} barSize={20} fill="#413ea0" />
         <Line type="monotone" dataKey={lineKey} stroke="#ff7300" />
+      </ComposedChart>
+    </ResponsiveContainer>
+  );
+}
+
+export function DoublePlot({
+  data,
+  xKey,
+  lineKey,
+  barKey,
+  barName,
+  lineName,
+  stackId,
+}: {
+  data: any[];
+  xKey: string;
+  lineKey?: string;
+  barKey: string;
+  barName: string;
+  lineName?: string;
+}) {
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <ComposedChart
+        data={data}
+        // width={500}
+        // height={300}
+        margin={
+          {
+            // top: 20,
+            // right: 10,
+            // bottom: 20,
+            // left: 20,
+          }
+        }
+      >
+        <CartesianGrid strokeDasharray="3 3" stroke="#222" />
+        <XAxis dataKey={xKey} />
+        <YAxis dataKey={barKey} tickFormatter={format} />
+        <Tooltip />
+        <Legend />
+        <Bar
+          name={barName}
+          dataKey={barKey}
+          barSize={20}
+          fill="#4589ff"
+          stackId={stackId}
+        />
+        {lineKey && (
+          <Line
+            name={lineName}
+            type="monotone"
+            dataKey={lineKey}
+            stroke="#08bdba"
+          />
+        )}
       </ComposedChart>
     </ResponsiveContainer>
   );

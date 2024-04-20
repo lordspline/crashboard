@@ -1,122 +1,94 @@
 "use client";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import React from "react";
 import { Map } from "react-map-gl";
 import maplibregl from "maplibre-gl";
-import {
-  AmbientLight,
-  PointLight,
-  LightingEffect,
-  FlyToInterpolator,
-} from "@deck.gl/core";
-import { HexagonLayer } from "@deck.gl/aggregation-layers";
+import { FlyToInterpolator } from "@deck.gl/core";
+import { HexagonLayer, HeatmapLayer } from "@deck.gl/aggregation-layers";
 import DeckGL from "@deck.gl/react";
 import "./style.scss";
 import {
-  StateAbbreviationsToNames,
   StatePos,
-  WeatherConditions,
-  YearStateAvailablity,
+  lightingEffect,
+  material,
+  MAP_STYLE,
+  colorRange,
 } from "./constants";
 import {
-  areArraysEqual,
+  processData,
+  processTrendData,
   categorizeWeatherCondition,
   getSeason,
   isEqual,
+  format,
 } from "./utils";
+import dayjs from "dayjs";
 import { readRemoteFile } from "react-papaparse";
-import MultiRangeSlider from "./MultiRangeSlider";
+import Filter from "./Filter";
+import Analysis from "./Analysis";
+
 import { debounce } from "lodash";
+import { ConfigProvider, theme } from "antd";
 
-const ambientLight = new AmbientLight({
-  color: [255, 255, 255],
-  intensity: 1.0,
-});
-
-const pointLight1 = new PointLight({
-  color: [255, 255, 255],
-  intensity: 0.8,
-  position: [-0.144528, 49.739968, 80000],
-});
-
-const pointLight2 = new PointLight({
-  color: [255, 255, 255],
-  intensity: 0.8,
-  position: [-3.807751, 54.104682, 8000],
-});
-
-const lightingEffect = new LightingEffect({
-  ambientLight,
-  pointLight1,
-  pointLight2,
-});
-
-const material = {
-  ambient: 0.64,
-  diffuse: 0.6,
-  shininess: 32,
-  specularColor: [51, 51, 51],
-};
-
-const MAP_STYLE =
-  "https://basemaps.cartocdn.com/gl/dark-matter-nolabels-gl-style/style.json";
-
-const colorRange = [
-  [1, 152, 189],
-  [73, 227, 206],
-  [216, 254, 181],
-  [254, 237, 177],
-  [254, 173, 84],
-  [209, 55, 78],
-];
-
-function getTooltip({ object }) {
+function getTooltip({ object } = {}) {
   if (!object) {
     return null;
   }
   const lat = object.position[1];
   const lng = object.position[0];
   const count = object.points.length;
+  const cities = Array.from(new Set(object.points.map((d) => d.source.City)));
 
   return `\
+    ${cities.join(", ")}
     latitude: ${Number.isFinite(lat) ? lat.toFixed(6) : ""}
     longitude: ${Number.isFinite(lng) ? lng.toFixed(6) : ""}
-    ${count} Accidents`;
+    ${format(count)} Accidents`;
 }
 
 const defaultFilters = {
-  season: "All",
+  // season: "All",
+  period: [dayjs("2023-01-01"), dayjs("2023-12-31")],
   time: [0, 24],
   weather: "All",
   severity: [1, 2, 3, 4],
 };
 
 function MapView({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
+  const [tab, setTab] = useState("history");
+
+  const [selectedData, setSelectedData] = useState();
+  const [selectedIdx, setSelectedIdx] = useState();
+
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
 
+  const [predictData, setPredictData] = useState();
+
   const [year, setYear] = useState("2023");
   const [state, setState] = useState("GA");
 
-  const [coverage, setCoverage] = useState(0.7); // 데이터 어그리게이션이랑 관계없
+  const [coverage, setCoverage] = useState(0.7);
   const [radius, setRadius] = useState(2000);
 
-  const [color, setColor] = useState(1000);
-  const [filter, setFilter] = useState(1000);
+  // const [color, setColor] = useState(1000);
+  // const [filter, setFilter] = useState(1000);
 
-  const [season, setSeason] = useState(defaultFilters.season);
+  // const [season, setSeason] = useState(defaultFilters.season);
+  const [period, setPeriod] = useState(defaultFilters.period);
   const [time, setTime] = useState(defaultFilters.time);
   const [weather, setWeather] = useState(defaultFilters.weather);
   const [severity, setSeverity] = useState(defaultFilters.severity);
 
-  const [domain, setDomain] = useState([0, 0]);
-  const [fixDomain, setFixDomain] = useState(false);
-  const prevFilters = useRef({ season, weather, severity, time });
+  // const [domain, setDomain] = useState();
+  const [colorDomain, setColorDomain] = useState();
 
-  const stateOptions = useMemo(() => {
-    return YearStateAvailablity[year];
-  }, [year]);
+  // const prevState = useRef({ year, state, radius });
+
+  // useEffect(() => {
+  //   prevState.current = { year, state, radius };
+  // }, [year, state, radius]);
 
   const viewState = useMemo(
     () => ({
@@ -139,39 +111,31 @@ function MapView({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
       header: true,
       complete: (results) => {
         const data = results.data;
-        setData(data);
-        setFixDomain(false);
+        setData(processData(data));
         resetFilters();
+        unselect();
         setLoading(false);
       },
-      download: true,
     });
-
-    // fetch(`/api/data?year=${year}&state=${state}`)
-    //   .then((response) => response.json())
-    //   .then((data) => {
-    //     console.log(data)
-    //     setData(data);
-    //     setFixDomain(false);
-    //   })
-    //   .catch((error) => {
-    //     console.log(error);
-    //   })
-    //   .finally(() => {
-    //     setLoading(false);
-    //   });
   }, [year, state]);
 
   useEffect(() => {
-    resetFilters();
-  }, [radius]);
+    readRemoteFile(`validated_data.csv`, {
+      header: true,
+      complete: (results) => {
+        const data = results.data;
+        setPredictData(processData(data));
+      },
+    });
+  }, []);
 
   const debounceFiltering = debounce(() => {
     const filteredData = data.filter((item) => {
-      if (season !== "All") {
-        const month = new Date(item.Start_Time).getMonth() + 1;
-        if (getSeason(month) !== season) return false;
-      }
+      // if (season !== "All") {
+      //   const month = new Date(item.Start_Time).getMonth() + 1;
+      //   if (getSeason(month) !== season) return false;
+      // }
+
       if (weather !== "All") {
         if (categorizeWeatherCondition(item["Weather_Condition"]) !== weather)
           return false;
@@ -179,6 +143,22 @@ function MapView({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
       if (severity.length !== 4) {
         if (!severity.includes(Number(item["Severity"]))) return false;
       }
+
+      if (period) {
+        const year = 2000;
+        const startMonthDay = dayjs(`${year}-${period[0].format("MM-DD")}`);
+        const endMonthDay = dayjs(`${year}-${period[1].format("MM-DD")}`);
+        const checkMonthDay = dayjs(
+          `${year}-${dayjs(item["Start_Time"]).format("MM-DD")}`
+        );
+
+        const isBetween =
+          checkMonthDay.isAfter(startMonthDay) &&
+          checkMonthDay.isBefore(endMonthDay);
+
+        if (!isBetween) return false;
+      }
+
       if (!(time[0] === 0 && time[1] === 24)) {
         const hour = new Date(item["Start_Time"]).getHours();
         const [startHour, endHour] = time;
@@ -188,59 +168,84 @@ function MapView({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
     });
 
     setFilteredData(filteredData);
-    console.log(
-      "filter",
-      season,
-      weather,
-      severity,
-      time,
-      data.length,
-      filteredData.length,
-      domain
-    );
-
-    if (isEqual(defaultFilters, { season, weather, severity, time })) {
-      setFixDomain(false);
-    } else {
-      setFixDomain(true);
-    }
-
-    prevFilters.current = {
-      season,
-      weather,
-      severity,
-      time,
-    };
   }, 300);
 
   const resetFilters = () => {
-    const { season, weather, severity, time } = defaultFilters;
-    setSeason(season);
+    const { weather, severity, time, period } = defaultFilters;
+    setPeriod(period);
     setTime(time);
     setWeather(weather);
     setSeverity(severity);
   };
 
+  const unselect = () => {
+    setSelectedIdx(undefined);
+    setSelectedData(undefined);
+  };
+
+  const onChangeTab = () => {
+    // setYear("2023");
+    resetFilters();
+    unselect();
+    setTab((prev) => (prev === "history" ? "prediction" : "history"));
+  };
+
+  const onChangeRadius = (e) => {
+    resetFilters();
+    unselect();
+    setRadius(e.target.value);
+  };
+
   //fiters
   useEffect(() => {
+    unselect();
     debounceFiltering();
     return () => debounceFiltering.cancel();
-  }, [data, season, weather, severity, time]);
+  }, [data, weather, severity, time, period]);
 
   const layers = useMemo(() => {
-    const layer = [
-      new HexagonLayer({
-        id: "heatmap",
+    if (!filteredData) return;
+    if (tab === "prediction") {
+      const layer = new HeatmapLayer({
+        id: "heatmap-layer",
+        data: predictData,
+        // pickable: true,
+        colorRange,
+        // aggregation: "SUM",
+        getPosition: (d) => {
+          return [Number(d["Start_Lng"]), Number(d["Start_Lat"])];
+        },
+        getWeight: (d) => {
+          return 1;
+        },
+        radiusPixels: 25,
+      });
+
+      return [layer];
+    } else {
+      const layer = new HexagonLayer({
+        id: "hexagon-layer",
         colorRange,
         coverage,
+        // getColorWeight: (d) => Number(d["Severity"]),
+        // colorAggregation: "MEAN",
+        onSetColorDomain: (domain) => {
+          setColorDomain(domain);
+        },
         data: filteredData,
         elevationRange: [0, 3000],
         elevationScale: [data && data.length ? 50 : 0],
-        elevationDomain: fixDomain ? domain : undefined,
-        onSetElevationDomain: (minmax) => {
-          if (!fixDomain) setDomain(minmax);
-        },
-
+        // elevationDomain: domain,
+        // onSetElevationDomain: (minmax) => {
+        //   if (
+        //     !domain ||
+        //     year !== prevState.current.year ||
+        //     state !== prevState.current.state ||
+        //     radius !== prevState.current.radius
+        //   ) {
+        //     setDomain(minmax);
+        //   }
+        // },
         extruded: true,
         getPosition: (d) => {
           return [Number(d["Start_Lng"]), Number(d["Start_Lat"])];
@@ -249,199 +254,113 @@ function MapView({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
         radius,
         upperPercentile,
         material,
-
         transitions: {
           elevationScale: 1000,
           getElevationValue: 1000,
         },
-      }),
-    ];
-    // console.log(layer);
-    return layer;
-  }, [filteredData, radius, coverage, fixDomain]);
+        autoHighlight: true,
+        highlightColor: [255, 255, 255],
+        highlightedObjectIndex: selectedIdx,
+        // getColorWeight: (point) => point.length,
+        // colorAggregation: "SUM",
+        // getColorValue: (d, i) => {
+        //   console.log(selectedIdx, d);
+        //   return i === selectedIdx ? [0, 255, 0] : d.length;
+        // },
+        onHover: (info, event) => {
+          // console.log(info, event);
+        },
+        onClick: (info, event) => {
+          setSelectedIdx(info?.index);
+          setSelectedData(info?.object.points);
+        },
+        // updateTriggers: {
+        // getColorValue: [selectedIdx],
+        // },
+      });
+      // console.log(layer);
+      return [layer];
+    }
+  }, [filteredData, state, year, radius, coverage, selectedIdx, tab]);
 
   return (
-    <div className="dark app" data-theme="dark">
-      <div className="form-container z-10">
-        <div className="form flex flex-col gap-10">
-          <div className="section flex flex-col gap-1">
-            <div className="title">Data</div>
-            <label className="form-control w-full max-w-xs">
-              <div className="label">
-                <span className="label-text">Year</span>
-                {/* <span className="label-text-alt">Alt label</span> */}
-              </div>
-              <select
-                defaultValue={2023}
-                className="select select-bordered select-sm"
-                onChange={(e) => {
-                  setYear(e.target.value);
-                }}
-              >
-                {Array(8)
-                  .fill(2023)
-                  .map((d, i) => d - i)
-                  .map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-              </select>
-              {/* <div className="label">
-            <span className="label-text-alt">Alt label</span>
-            <span className="label-text-alt">Alt label</span>
-          </div> */}
-            </label>
+    <ConfigProvider
+      theme={{
+        // 1. Use dark algorithm
+        algorithm: theme.darkAlgorithm,
+        token: {
+          colorPrimary: "#a6adbb",
+          colorBgBase: "#1e2329",
+          colorTextBase: "#a6adbb",
+          DatePicker: {
+            cellActiveWithRangeBg: "rgba(30,35,41,0.3)",
+            activeBg: "rgba(30,35,41,0.3)",
+            activeShadow: "none",
+          },
+        },
 
-            <label className="form-control w-full max-w-xs">
-              <div className="label">
-                <span className="label-text">State</span>
-              </div>
-              <select
-                defaultValue={"GA"}
-                className="select select-bordered select-sm"
-                onChange={(e) => {
-                  setState(e.target.value);
-                }}
-              >
-                {stateOptions.map((d) => (
-                  <option key={d} value={d}>
-                    {StateAbbreviationsToNames[d]}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <div className="section flex flex-col gap-1">
-            <div className="title">Aggregation</div>
-
-            <label className="form-control w-full max-w-xs">
-              <div className="label">
-                <span className="label-text">Radius</span>
-              </div>
-              <input
-                type="range"
-                min={100}
-                step={100}
-                max={20000}
-                defaultValue={radius}
-                className="range range-sm"
-                onChange={(e) => {
-                  setRadius(e.target.value);
-                  setFixDomain(false);
-                }}
-              />
-            </label>
-          </div>
-          <div className="section flex flex-col gap-1">
-            <div className="title">Filters</div>
-            <label className="form-control w-full max-w-xs">
-              <div className="label">
-                <span className="label-text">Seasons</span>
-              </div>
-              <select
-                value={season}
-                defaultValue={"All"}
-                className="select select-bordered select-sm"
-                onChange={(e) => {
-                  setSeason(e.target.value);
-                }}
-              >
-                <option value="All">All</option>
-                <option value="Spring">Spring</option>
-                <option value="Summer">Summer</option>
-                <option value="Fall">Fall</option>
-                <option value="Winter">Winter</option>
-              </select>
-            </label>
-
-            <label className="form-control w-full max-w-xs relative">
-              <div className="label">
-                <span className="label-text">Time</span>
-              </div>
-              <MultiRangeSlider
-                min={0}
-                max={24}
-                step={1}
-                value={time}
-                onChange={({ min, max }) => {
-                  setTime([min, max]);
-                }}
-              ></MultiRangeSlider>
-            </label>
-
-            <label className="form-control w-full max-w-xs">
-              <div className="label">
-                <span className="label-text">Weather Condition</span>
-              </div>
-              <select
-                defaultValue={"All"}
-                className="select select-bordered select-sm"
-                onChange={(e) => {
-                  setWeather(e.target.value);
-                }}
-              >
-                {WeatherConditions.map((d) => (
-                  <option key={d.value} value={d.value}>
-                    {d.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="form-control w-full max-w-xs">
-              <div className="label">
-                <span className="label-text">Severity</span>
-              </div>
-              <div className="flex items-center gap-5">
-                {[1, 2, 3, 4].map((d) => (
-                  <label
-                    key={d}
-                    className="cursor-pointer flex items-center gap-2"
-                  >
-                    <span className="label-text">{d}</span>
-                    <input
-                      type="checkbox"
-                      className="checkbox checkbox-sm"
-                      checked={severity.includes(d)}
-                      onChange={(e) => {
-                        const isIn = severity.includes(d);
-                        if (e.target.checked) {
-                          !isIn && setSeverity([...severity, d]);
-                        } else {
-                          isIn && setSeverity(severity.filter((s) => s !== d));
-                        }
-                      }}
-                    />
-                  </label>
-                ))}
-              </div>
-            </label>
-          </div>
+        // 2. Combine dark algorithm and compact algorithm
+        // algorithm: [theme.darkAlgorithm, theme.compactAlgorithm],
+      }}
+    >
+      <div className="dark app" data-theme="dark">
+        <Filter
+          {...{
+            tab,
+            setTab,
+            year,
+            setYear,
+            state,
+            setState,
+            radius,
+            setRadius,
+            // setFixDomain,
+            // season,
+            // setSeason,
+            period,
+            setPeriod,
+            time,
+            setTime,
+            weather,
+            setWeather,
+            severity,
+            setSeverity,
+            onChangeTab,
+            onChangeRadius,
+            colorDomain,
+          }}
+        ></Filter>
+        {selectedData !== undefined && (
+          <Analysis
+            data={selectedData}
+            unselect={unselect}
+            {...{ year, state, radius, time, weather, severity, period }}
+          ></Analysis>
+        )}
+        <div className="vis relative">
+          {loading && (
+            <div className="flex pointer-events-none select-none z-50 justify-center items-center w-full h-full absolute">
+              <span className="loading loading-spinner loading-lg"></span>
+            </div>
+          )}
+          <DeckGL
+            layers={layers}
+            effects={[lightingEffect]}
+            initialViewState={viewState}
+            controller={true}
+            getTooltip={getTooltip}
+            // onClick={}
+          >
+            <Map
+              reuseMaps
+              mapLib={maplibregl}
+              mapStyle={mapStyle}
+              preventStyleDiffing={true}
+            />
+          </DeckGL>
         </div>
       </div>
-      <div className="vis relative">
-        {loading && (
-          <div className="flex pointer-events-none select-none z-50 justify-center items-center w-full h-full absolute">
-            <span className="loading loading-spinner loading-lg"></span>
-          </div>
-        )}
-        <DeckGL
-          layers={layers}
-          effects={[lightingEffect]}
-          initialViewState={viewState}
-          controller={true}
-          getTooltip={getTooltip}
-        >
-          <Map
-            reuseMaps
-            mapLib={maplibregl}
-            mapStyle={mapStyle}
-            preventStyleDiffing={true}
-          />
-        </DeckGL>
-      </div>
-    </div>
+    </ConfigProvider>
   );
 }
 

@@ -1,3 +1,40 @@
+"use client";
+import * as d3 from "d3";
+
+export const format = d3.format(",");
+// export const format = d3.format(",.2f");
+
+export const processData = (data) => {
+  data.forEach((d) => {
+    [
+      "Severity",
+      "Temperature(F)",
+      "Humidity(%)",
+      "Visibility(mi)",
+      "Wind_Speed(mph)",
+      "Precipitation(in)",
+    ].forEach((c) => {
+      d[c] = Number(d[c]);
+    });
+  });
+  return data;
+};
+
+export const processTrendData = (data) => {
+  data.forEach((d) => {
+    [
+      "Severity1Count",
+      "Severity2Count",
+      "Severity3Count",
+      "Severity4Count",
+      "TotalAccidentCount",
+    ].forEach((c) => {
+      d[c] = Number(d[c]);
+    });
+  });
+  return data;
+};
+
 export function getSeason(month) {
   if (month >= 3 && month <= 5) return "Spring";
   if (month >= 6 && month <= 8) return "Summer";
@@ -14,7 +51,7 @@ export function categorizeWeatherCondition(condition) {
     lowerCaseCondition.includes("fair")
   )
     return "clear";
-  else if (lowerCaseCondition.includes("cloud")) return "Cloudy";
+  else if (lowerCaseCondition.includes("cloud")) return "cloudy";
   else if (
     lowerCaseCondition.includes("rain") ||
     lowerCaseCondition.includes("showers")
