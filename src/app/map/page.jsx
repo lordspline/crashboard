@@ -48,7 +48,7 @@ function getTooltip({ object } = {}) {
 
 const defaultFilters = {
   // season: "All",
-  period: [dayjs("2023-01-01"), dayjs("2023-12-31")],
+  period: [dayjs("2022-01-01"), dayjs("2022-12-31")],
   time: [0, 24],
   weather: "All",
   severity: [1, 2, 3, 4],
@@ -66,7 +66,7 @@ function MapView({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
 
   const [predictData, setPredictData] = useState();
 
-  const [year, setYear] = useState("2023");
+  const [year, setYear] = useState("2022");
   const [state, setState] = useState("GA");
 
   const [coverage, setCoverage] = useState(0.7);
@@ -217,7 +217,7 @@ function MapView({ mapStyle = MAP_STYLE, upperPercentile = 100 }) {
         getWeight: (d) => {
           return 1;
         },
-        radiusPixels: 25,
+        radiusPixels: 60,
       });
 
       return [layer];
